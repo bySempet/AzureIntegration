@@ -11,4 +11,6 @@ override.tf.json
 *_override.tf.json
 .terraformrc
 terraform.rc
-# .terraform.lock.hcl SI se versiona
+# Variables locales (contienen tu IP)
+terraform.tfvars
+tfplan
