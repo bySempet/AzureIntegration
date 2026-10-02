@@ -1,8 +1,9 @@
 # AzureIntegration
-Anotaciones Importantes durante el proceso de generación del state local, es decir, la generacion de la infraestructura que almacenara el state del resto del proyecto. State local de infra que almacena el state cloud.
+Anotaciones Importantes durante el proceso de generación del state local, es decir, la generacion de la infraestructura que almacenara el state del resto del proyecto. State local de infra que almacena el state cloud. As i have started to know everything in Azure is a resource, so we have to create a Resource Group to create the resources, then we have to create the S3 bucket of Azure which is the Blob Storage(Container), this Blob Storage is inside a Storage Account, which is the way of Azure of grouping all the data storage services. 
+We can say the hierarqhy is this way -> subscription -> resource group -> storage account -> blob storage
+The blob storage is defined by containers 
 
-Elementos necesarios, resource_group, storage_account y storage_container. Las storage_accounts dependen del resource_grup y el container del storage_account. Para que se generen siempre en el orden necesario,
-se debe de definir con la siguiente nomenclatura "type.definedResourceName.variable", en la variable que necesita de dependencia.
+Elementos necesarios, resource_group, storage_account y storage_container. Las storage_accounts dependen del resource_grup y el container del storage_account. Para que se generen siempre en el orden necesario,se debe de definir con la siguiente nomenclatura "type.definedResourceName.variable", en la variable que necesita de dependencia.
 
 Always "terraform init" -> "terraform validate" -> "terraform plan" -> check what is going to be created and lastly -> "terraform apply".
 
@@ -46,4 +47,9 @@ I had destroyed the azure_backend, so i had to apply it again. The Storage Accou
 To deploy it: put your IP with /32 in terraform.tfvars -> check the VM size is available with "az vm list-skus" -> "terraform init" -> "terraform validate" -> "terraform plan" -> "terraform apply" -> "terraform output ssh_command" to connect.
 
 After doing the *terraform apply* it creates 7 resources and then shows the next *Error* 'SkuNotAvailable: The requested VM size for resource 'Following SKUs have failed for Capacity Restrictions: Standard_F1s' is currently not available in location 'northeurope'.
-After checking, it means that this type of machine with this resources it is not available to create a new one on this region. 
+This means it is not available to create another instance of this machine in the specified region. After checking, it means is not actualy available for my type of subscription not in general
+
+After listing all the regions in europe, it looks that Sweden Central is the only one that the free subscription doesnt have limits. I used a Standard_B2ats_v2 size machine.
+Connecting to the machine by *ssh azureuser@VMsIPAdress", because we have created a public ed25519 key that has been copied in the VM. We can be authenticated from our local host to the VM and connect directly.
+
+![SSH connection to the VM](images/VMconnection.PNG)
