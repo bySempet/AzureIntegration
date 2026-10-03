@@ -16,7 +16,8 @@ provider "azurerm" {
   resource_providers_to_register = [
     "Microsoft.Compute",
     "Microsoft.Network",
-    "Microsoft.DevTestLab"
+    "Microsoft.DevTestLab",
+    "Microsoft.KeyVault"
   ]
   features {}
 }
