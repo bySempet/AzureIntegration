@@ -1,9 +1,9 @@
 # AzureIntegration
-Anotaciones Importantes durante el proceso de generación del state local, es decir, la generacion de la infraestructura que almacenara el state del resto del proyecto. State local de infra que almacena el state cloud. As i have started to know everything in Azure is a resource, so we have to create a Resource Group to create the resources, then we have to create the S3 bucket of Azure which is the Blob Storage(Container), this Blob Storage is inside a Storage Account, which is the way of Azure of grouping all the data storage services. 
+Important notes taken while building the local state, that is, the infrastructure that will store the state of the rest of the project. A local state for the infra that stores the cloud state. As i have started to know everything in Azure is a resource, so we have to create a Resource Group to create the resources, then we have to create the S3 bucket of Azure which is the Blob Storage(Container), this Blob Storage is inside a Storage Account, which is the way of Azure of grouping all the data storage services. 
 We can say the hierarqhy is this way -> subscription -> resource group -> storage account -> blob storage
 The blob storage is defined by containers 
 
-Elementos necesarios, resource_group, storage_account y storage_container. Las storage_accounts dependen del resource_grup y el container del storage_account. Para que se generen siempre en el orden necesario,se debe de definir con la siguiente nomenclatura "type.definedResourceName.variable", en la variable que necesita de dependencia.
+Needed elements: resource_group, storage_account and storage_container. The storage_account depends on the resource_group and the container depends on the storage_account. To make sure they are always created in the right order, you have to reference them with the nomenclature "type.definedResourceName.variable" in the variable that has the dependency.
 
 Always "terraform init" -> "terraform validate" -> "terraform plan" -> check what is going to be created and lastly -> "terraform apply".
 
@@ -53,3 +53,19 @@ After listing all the regions in europe, it looks that Sweden Central is the onl
 Connecting to the machine by *ssh azureuser@VMsIPAdress", because we have created a public ed25519 key that has been copied in the VM. We can be authenticated from our local host to the VM and connect directly.
 
 ![SSH connection to the VM](images/VMconnection.PNG)
+
+So the next step is trying to give a secret to the VM in a secure way. The idea is that Terraform generates a random password, saves it in a *Key Vault*, and the VM can read it without that password passing through my code. 
+
+The Key Vault is created with *rbac_authorization_enabled = true*. At first i copied the example from the documentation, which uses *access policies*, but that is the old way of giving permissions. With RBAC the permissions are given with roles, the same system as the rest of Azure, so it is all in one place. The name of the Key Vault is global in all Azure and can have max 24 characters, so like the Storage Account i used a *random_string* for the name.
+
+Then i need permissions for myself. It is the same thing that happened with the Storage Account, being the Owner doesnt let you create secrets inside the Key Vault. So i give myself the role "Key Vault Secrets Officer" over the Key Vault. RBAC takes some time to propagate, so if the secret is created right after the role it fails with a 403. To fix it i added a *time_sleep* of 90s.
+
+The password is generated with *random_password* and saved with *azurerm_key_vault_secret*. My first try was using the same *random_string* for the name of the Key Vault and for the password, thought that the value of the *random_string* was different every time and not the same for everything
+
+Something important about this, the password is also saved in the Terraform state, in plain text. That is why the state has to live in a private Storage Account with Entra ID auth and not in Git. Anyone who can read the state can read the password.
+
+For the VM to read the secret it needs an identity, so i added an *identity* block with type "SystemAssigned" in the VM. This makes Azure create an identity for the VM in Entra ID. The vm module returns its *principal_id* as an output, and in *main_backend* i give it the role "Key Vault Secrets User". I put this role assignment in main_backend and not in the module, so the vm module doesnt need to know anything about the Key Vault and i can still use it in other projects.
+
+The difference between the two roles is the important part. "Secrets Officer" can create, read and delete secrets, that is for me. "Secrets User" can only read them.
+
+I havent tried this last part yet. 
