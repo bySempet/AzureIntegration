@@ -68,4 +68,12 @@ For the VM to read the secret it needs an identity, so i added an *identity* blo
 
 The difference between the two roles is the important part. "Secrets Officer" can create, read and delete secrets, that is for me. "Secrets User" can only read them.
 
-I havent tried this last part yet. 
+After applying everything has build up correctly, to check if everything has gone correctly we have to connect to the VM and then ask for the secret.
+After connecting to the machine to ask Key Vault for the secret we have to ask for an authentication token.
+For that we have to use the next url:
+"http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fvault.azure.net"
+I dint know but that IP is an IP that is exposed locally to all the VMs so they can ask for their identity. It is called IMS(Instance Metada Service), with the parameter resource *https%3A%2F%2Fvault.azure.net* we are indicating for what service we need that token
+
+With that token in hand we can call the Key Vault with his name, because its unique and the secret, and we receive the next value:
+
+![Respond of Key Vault](images/Secret.PNG)
