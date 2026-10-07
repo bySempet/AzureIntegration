@@ -27,7 +27,7 @@ locals {
 }
 
 provider "azurerm" {
-  resource_providers_to_register = ["Microsoft.Storage"]
+  resource_providers_to_register = ["Microsoft.Storage", "Microsoft.ManagedIdentity"]
   features {}
 }
 resource "random_string" "suffix" {

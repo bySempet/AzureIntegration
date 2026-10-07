@@ -1,0 +1,53 @@
+name: Terraform Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "main_backend/**"
+      - "azure_backend/**"
+      - "modules/**"
+      - ".tflint.hcl"
+      - ".github/workflows/terraform-check.yml"
+
+permissions:
+  contents: read
+
+env:
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+
+jobs:
+  build:
+    name: tf-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.16.x"
+          terraform_wrapper: false
+
+      - name: terraform fmt
+        run: terraform fmt -check -recursive -diff
+
+      - name: terraform validate
+        run: |
+          for dir in azure_backend main_backend; do
+            echo "::group::$dir"
+            terraform -chdir="$dir" init -backend=false
+            terraform -chdir="$dir" validate
+            echo "::endgroup::"
+          done
+
+      - uses: terraform-linters/setup-tflint@v4
+
+      - name: tflint
+        run: |
+          tflint --init --config "$GITHUB_WORKSPACE/.tflint.hcl"
+          tflint --recursive --config "$GITHUB_WORKSPACE/.tflint.hcl" --format compact
+        env:
+          GITHUB_TOKEN: ${{ github.token }} 
+
+  
