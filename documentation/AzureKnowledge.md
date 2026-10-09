@@ -279,3 +279,38 @@ You can use Azure Cloud Shell to:
 - Persist files between sessions for later use.
 - Use either Bash or PowerShell, whichever you prefer, to manage Azure resources.
 - Edit files (such as scripts) via the Cloud Shell editor
+
+
+Azure Resource manager Template (ARM Templates) AWS CloudFormation
+A way od describing your infraestructure in code, like Terraform.
+In this case they are described in JSON files in and declarative way.
+ARM templates allows you to automate de deployment of the infraestructure.
+They are idempotent, which means you can deploy the same template as many times as you want in the same state. It also has a built-in validation before the stage of deployment.
+You can build smaller components to reuse them in the future  -> You can integrait it with Azure pipelines (CI/CD)
+As always you need to create a RG or use one that was created before
+
+az group create --name {name of your resource group} --location "{location}"
+templateFile="{provide-the-path-to-the-template-file}"
+az deployment group create --name blanktemplate --resource-group myResourceGroup --template-file $templateFile
+
+For a storage Account you need the  `Microsoft.Storage` provider, i saw it when i started creating the Terraform project.
+
+![](images/Pasted%20image%20261009175330.png)
+
+The way od defininf the default RG:
+
+Set-AzDefault -ResourceGroupName <ResourceGroupName>
+$templateFile="azuredeploy.json"
+$today=Get-Date -Format "MM-dd-yyyy"
+$deploymentName="addstorage-"+"$today"
+New-AzResourceGroupDeployment -Name $deploymentName -TemplateFile $templateFile
+
+ARM-template parameters let you customize the deployment by providing values that are tailored for a particular environment, you pass in different values based on whether you're deploying to an environment for development, test, production, or others.
+In your ARM template's outputs section, you can specify the values that are returned after a successful deployment
+This is pretty much the same as Terraform and CloduFormation.
+You can have variables, modules, local variables, outputs...
+
+Understanding in depth the Microsoft Entra ID
+We can tell that Entra ID is a not self-hosted service that let you have access to more features that a common AD has, multi-factor auth, identity provider and self-service pwd.
+Any subscription beside the free one gives you full access to the fre features.
+Different version of Entra ID are offered in the basic or premium tiers as part of Microsoft 365 subscription
